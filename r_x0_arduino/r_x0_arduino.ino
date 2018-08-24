@@ -87,13 +87,15 @@ void draw(bool action) {
 void transmit(bool action) {
   int led = int((time / 100) % 2);
   analogWrite(MODE_LED, led * 255);
+
+  if (action) {
+    Serial.println('START');
+  }
 }
 
 void callibrate(bool action) {
   int led = abs(256 - int((time / 2) % 512));
   analogWrite(MODE_LED, led);
-
-  Serial.println(led);
 
   if (action) {
     penDown = !penDown;
