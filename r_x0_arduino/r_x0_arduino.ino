@@ -24,6 +24,8 @@
 
 #define SERVO 9
 
+#define BUFFER_SIZE 20 // actual size of the buffer for integer values: (numberOfValsToRead*6)+(numberOfValsToRead-1)
+
 Servo servo;
 byte mode = DRAW;
 bool modeBtnState = true;
@@ -31,9 +33,14 @@ bool actionBtnState = true;
 
 unsigned long time;
 bool penDown = false;
+bool readSerial = false;
 
 const float step_mm = (76 * PI) / 1600;
 const float step_deg = (240 * PI) / 360 / step_mm;
+ 
+char incommingBuffer[BUFFER_SIZE]; // buffer to store incomming values
+char incomming; // primary buffer to store single incommning bytes
+int incommingCounter = 0; // counter for counting the positions inside the buffer
 
 void setup() {
   pinMode(ACTION_BTN, INPUT_PULLUP);
@@ -88,8 +95,71 @@ void transmit(bool action) {
   int led = int((time / 100) % 2);
   analogWrite(MODE_LED, led * 255);
 
+  if (readSerial) {
+    while (Serial.available() > 0) {
+      incomming = Serial.read(); // read single incommning bytes
+ 
+      if (incomming != '\r') {
+        incommingBuffer[incommingCounter++] = incomming; // go on the next position in the buffer
+      } else {
+        incommingBuffer[incommingCounter] = '&#092;&#048;'; // set the last byte to NULL to sign it for the string operators
+   
+        char *a = strtok(incommingBuffer, ",.;"); // split the string after delimiters into tokens
+        char *b = strtok(NULL, ",.;"); // ...
+        char *c = strtok(NULL, ",.;"); // ...
+        //char *d = strtok(NULL, ",.;"); // add another line if needed
+
+        if (String(a) == "STOP") {
+          digitalWrite(ACTION_LED, HIGH);
+          Serial.println("SUCCESS");
+        } else {
+          int firstValue = atoi(a); // convert the strings into integers
+          int secondValue = atoi(b); // ...
+          int thirdValue = atoi(c); // ...
+          //fourthValue = atoi(d); // add another line if needed    
+           
+          incommingCounter = 0; // reset the counter
+          memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
+  
+          Serial.print(firstValue); // debugging
+          Serial.print("\t");
+          Serial.print(secondValue);
+          Serial.print("\t");
+          Serial.print(thirdValue);
+          Serial.print("\t");
+          Serial.println(); // send a carriage return for debugging
+  
+          if (secondValue == 120) {
+            digitalWrite(ACTION_LED, HIGH);
+          } 
+        }
+      }
+//      char type = Serial.read();
+//      char dir = Serial.read();
+//      char value = Serial.parseInt();
+//      Serial.println("--");
+//      Serial.print(value);
+//      
+//
+//      if (Serial.read() == '\n') {
+//        Serial.println(type);
+//        Serial.println("--");
+//        Serial.println(dir);
+//        Serial.println("--");
+//        Serial.print(value);
+//        Serial.println();
+//        readSerial = false;
+//        digitalWrite(ACTION_LED, HIGH);
+//      }
+    }
+
+    //Serial.print("END");
+  }
+
   if (action) {
-    Serial.println('START');
+    digitalWrite(ACTION_LED, LOW);
+    Serial.println("START");
+    readSerial = true;
   }
 }
 
