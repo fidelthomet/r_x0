@@ -38,19 +38,33 @@ void draw()
     println(val);
     if(val.equals("START")) {
        
+      myPort.write(str(1));
+      myPort.write(",");
+      myPort.write(str(1));
+      myPort.write(",");
       myPort.write(str(0));
       myPort.write(",");
-      myPort.write(str(-21));
-      myPort.write(",");
-      myPort.write(str(2));
+      myPort.write(str(400));
       myPort.write(",");
       myPort.write("\r");
       
-      myPort.write(str(4));
+      myPort.write(str(0));
       myPort.write(",");
-      myPort.write(str(5));
+      myPort.write(str(1));
       myPort.write(",");
-      myPort.write(str(8));
+      myPort.write(str(1));
+      myPort.write(",");
+      myPort.write(str(400));
+      myPort.write(",");
+      myPort.write("\r");
+      
+      myPort.write(str(1));
+      myPort.write(",");
+      myPort.write(str(1));
+      myPort.write(",");
+      myPort.write(str(0));
+      myPort.write(",");
+      myPort.write(str(4000));
       myPort.write(",");
       myPort.write("\r");
       
@@ -59,9 +73,8 @@ void draw()
       myPort.write(",");
       myPort.write(",");
       myPort.write("\r");
-      println("did send");
     } else if(val.equals("SUCCESS")) {
-      
+      println("did send");
     } else {
       println("nope");
     }
