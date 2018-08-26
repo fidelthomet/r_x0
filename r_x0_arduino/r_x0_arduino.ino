@@ -10,7 +10,7 @@
 #define BACK HIGH
 #define FORWARD LOW
 
-#define BUFFER_SIZE 20 // actual size of the buffer for integer values: (numberOfValsToRead*6)+(numberOfValsToRead-1)
+#define BUFFER_SIZE 27 // actual size of the buffer for integer values: (numberOfValsToRead*6)+(numberOfValsToRead-1)
 
 // Pins
 #define MODE_BTN 7
