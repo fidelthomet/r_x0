@@ -112,14 +112,13 @@ void transmit(bool action) {
         if (String(a) == "STOP") {
           digitalWrite(ACTION_LED, HIGH);
           Serial.println("SUCCESS");
+          readSerial = false;
         } else {
           int firstValue = atoi(a); // convert the strings into integers
           int secondValue = atoi(b); // ...
           int thirdValue = atoi(c); // ...
           //fourthValue = atoi(d); // add another line if needed    
-           
-          incommingCounter = 0; // reset the counter
-          memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
+          
   
           Serial.print(firstValue); // debugging
           Serial.print("\t");
@@ -128,11 +127,9 @@ void transmit(bool action) {
           Serial.print(thirdValue);
           Serial.print("\t");
           Serial.println(); // send a carriage return for debugging
-  
-          if (secondValue == 120) {
-            digitalWrite(ACTION_LED, HIGH);
-          } 
         }
+        incommingCounter = 0; // reset the counter
+        memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
       }
 //      char type = Serial.read();
 //      char dir = Serial.read();

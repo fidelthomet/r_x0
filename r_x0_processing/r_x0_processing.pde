@@ -40,7 +40,7 @@ void draw()
        
       myPort.write(str(0));
       myPort.write(",");
-      myPort.write(str(1));
+      myPort.write(str(-21));
       myPort.write(",");
       myPort.write(str(2));
       myPort.write(",");
