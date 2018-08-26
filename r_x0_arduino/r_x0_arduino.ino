@@ -5,6 +5,11 @@
 #define TRANSMIT 1
 #define CALLIBRATE 2
 
+#define OFF 0
+#define ON 1
+#define BLINK 2
+#define FADE 3
+
 #define LEFT LOW
 #define RIGHT HIGH
 #define BACK HIGH
@@ -106,20 +111,26 @@ void loop() {
 void updateMode() {
   bool newModeBtnState = digitalRead(MODE_BTN);
   if (newModeBtnState && !modeBtnState) {
+    penDown = false;
+    readSerial = false;
+    drawing = false;
+    command = 0;
+    incommingCounter = 0;
+
     mode = (mode + 1) % 3;
   }
   modeBtnState = newModeBtnState;
 }
 
 void draw(bool action) {
-  analogWrite(MODE_LED, 255);
+  light(MODE_LED, ON);
 
   if (action) {
     drawing = !drawing;
   }
 
   if (drawing) {
-    // int c[4] = commands[command];
+    light(ACTION_LED, ON);
     if (commands[command][0] == 0 && commands[command][1] == 0 && commands[command][2] == 0 && commands[command][3] == 0) {
       raisePen();
       drawing = false;
@@ -146,14 +157,16 @@ void draw(bool action) {
       }
       command++;
     }
+  } else {
+    light(ACTION_LED, OFF);
   }
 }
 
 void transmit(bool action) {
-  int led = int((time / 100) % 2);
-  analogWrite(MODE_LED, led * 255);
+  light(MODE_LED, BLINK);
 
   if (readSerial) {
+    light(ACTION_LED, ON);
     while (Serial.available() > 0) {
       incomming = Serial.read(); // read single incommning bytes
 
@@ -168,15 +181,19 @@ void transmit(bool action) {
         char *d = strtok(NULL, ",.;"); // add another line if needed
 
         if (String(a) == "STOP") {
-          digitalWrite(ACTION_LED, HIGH);
+          light(ACTION_LED, OFF);
           Serial.println("SUCCESS");
           readSerial = false;
+          commands[command][0] = 0;
+          commands[command][1] = 0;
+          commands[command][2] = 0;
+          commands[command][3] = 0;
           command = 0;
         } else {
-          commands[command][0] = atoi(a); // convert the strings into integers
-          commands[command][1] = atoi(b); // ...
-          commands[command][2] = atoi(c); // ...
-          commands[command][3] = atoi(d); // add another line if needed
+          commands[command][0] = atoi(a);
+          commands[command][1] = atoi(b);
+          commands[command][2] = atoi(c);
+          commands[command][3] = atoi(d);
           command++;
         }
         incommingCounter = 0; // reset the counter
@@ -193,49 +210,38 @@ void transmit(bool action) {
 }
 
 void callibrate(bool action) {
-  int led = abs(256 - int((time / 2) % 512));
-  analogWrite(MODE_LED, led);
+  light(MODE_LED, FADE);
 
   if (action) {
     penDown = !penDown;
+    light(ACTION_LED, ON);
     if (penDown) {
       raisePen();
     } else {
       lowerPen();
     }
+    delay(250);
+    light(ACTION_LED, OFF);
   }
 }
 
-void rotate (bool dir, float deg) {
-  digitalWrite(ST1DIR, dir);
-  digitalWrite(ST2DIR, dir);
-
-  const int steps = round(deg * step_deg);
-
-  for (int i = 0; i < steps; i++){
-    digitalWrite(ST1STEP, HIGH);
-    digitalWrite(ST2STEP, HIGH);
-    delay(1);
-
-    digitalWrite(ST1STEP, LOW);
-    digitalWrite(ST2STEP, LOW);
-    delay(1);
-  }
-}
-
-void move (bool dir, float mm) {
-  digitalWrite(ST1DIR, dir);
-  digitalWrite(ST2DIR, !dir);
-
-  const int steps = round(mm / step_mm);
-
-  for (int i = 0; i < steps; i++) {
-    digitalWrite(ST1STEP, HIGH);
-    digitalWrite(ST2STEP, HIGH);
-    delay(1);
-    digitalWrite(ST1STEP, LOW);
-    digitalWrite(ST2STEP, LOW);
-    delay(1);
+void light(byte led, byte lightMode) {
+  int brightness;
+  switch (lightMode) {
+    case OFF:
+      digitalWrite(led, LOW);
+      break;
+    case ON:
+      digitalWrite(led, HIGH);
+      break;
+    case BLINK:
+      brightness = int((time / 100) % 2);
+      analogWrite(MODE_LED, brightness * 255);
+      break;
+    case FADE:
+      brightness = abs(256 - int((time / 2) % 512));
+      analogWrite(led, brightness);
+      break;
   }
 }
 
