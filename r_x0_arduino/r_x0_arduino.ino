@@ -10,11 +10,6 @@
 #define BLINK 2
 #define FADE 3
 
-#define LEFT LOW
-#define RIGHT HIGH
-#define BACK HIGH
-#define FORWARD LOW
-
 #define BUFFER_SIZE 27 // actual size of the buffer for integer values: (numberOfValsToRead*6)+(numberOfValsToRead-1)
 
 // Pins
