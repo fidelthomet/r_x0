@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "serialport": "^6.2.2"
+    "serialport": "^6.2.2",
+    "svg-path-properties": "^0.4.4"
   }
 }

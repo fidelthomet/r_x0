@@ -31,7 +31,7 @@ byte mode = DRAW;
 bool modeBtnState = true;
 bool actionBtnState = true;
 
-unsigned int commands[100][4];
+unsigned int commands[200][4];
 
 unsigned long time;
 bool penDown = false;
@@ -59,7 +59,7 @@ void setup() {
   pinMode(ST2STEP, OUTPUT);
 
   servo.attach(9);
-  Serial.begin(9600);
+  Serial.begin(57600);
 
   commands[0][0] = 1;
   commands[0][1] = 1;
@@ -126,7 +126,13 @@ void draw(bool action) {
 
   if (drawing) {
     light(ACTION_LED, ON);
+    Serial.println("Drawing");
+    Serial.print(commands[command][0]);
+    Serial.print(commands[command][1]);
+    Serial.print(commands[command][2]);
+    Serial.println(commands[command][3]);
     if (commands[command][0] == 0 && commands[command][1] == 0 && commands[command][2] == 0 && commands[command][3] == 0) {
+      Serial.println("Stop Drawing");
       raisePen();
       drawing = false;
       command = 0;
@@ -136,7 +142,7 @@ void draw(bool action) {
       } else {
         raisePen();
       }
-      delay(250);
+      // delay(250);
 
       digitalWrite(ST1DIR, commands[command][1]);
       digitalWrite(ST2DIR, commands[command][2]);
@@ -160,48 +166,37 @@ void draw(bool action) {
 void transmit(bool action) {
   light(MODE_LED, BLINK);
 
-  if (readSerial) {
+  // if (readSerial) {
+
+  while (Serial.available() > 0) {
     light(ACTION_LED, ON);
-    while (Serial.available() > 0) {
-      incomming = Serial.read(); // read single incommning bytes
+    incomming = Serial.read(); // read single incommning bytes
 
-      if (incomming != '\r') {
-        incommingBuffer[incommingCounter++] = incomming; // go on the next position in the buffer
-      } else {
-        incommingBuffer[incommingCounter] = '&#092;&#048;'; // set the last byte to NULL to sign it for the string operators
+    if (incomming != '\r') {
+      incommingBuffer[incommingCounter++] = incomming; // go on the next position in the buffer
+    } else {
+      incommingBuffer[incommingCounter] = '&#092;&#048;'; // set the last byte to NULL to sign it for the string operators
 
-        char *a = strtok(incommingBuffer, ",.;"); // split the string after delimiters into tokens
-        char *b = strtok(NULL, ",.;"); // ...
-        char *c = strtok(NULL, ",.;"); // ...
-        char *d = strtok(NULL, ",.;"); // add another line if needed
+      int a = atoi(strtok(incommingBuffer, ",.;"));
+      int b = atoi(strtok(NULL, ",.;"));
+      int c = atoi(strtok(NULL, ",.;"));
+      int d = atoi(strtok(NULL, ",.;"));
 
-        if (String(a) == "STOP") {
-          light(ACTION_LED, OFF);
-          Serial.println("SUCCESS");
-          readSerial = false;
-          commands[command][0] = 0;
-          commands[command][1] = 0;
-          commands[command][2] = 0;
-          commands[command][3] = 0;
-          command = 0;
-        } else {
-          commands[command][0] = atoi(a);
-          commands[command][1] = atoi(b);
-          commands[command][2] = atoi(c);
-          commands[command][3] = atoi(d);
-          command++;
-        }
-        incommingCounter = 0; // reset the counter
-        memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
+      commands[command][0] = a;
+      commands[command][1] = b;
+      commands[command][2] = c;
+      commands[command][3] = d;
+      Serial.println(command++);
+
+      if (a == 0 && b == 0 & c == 0 & d == 0) {
+        command = 0;
+        light(ACTION_LED, OFF);
       }
+      incommingCounter = 0; // reset the counter
+      memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
     }
   }
-
-  if (action) {
-    digitalWrite(ACTION_LED, LOW);
-    Serial.println("START");
-    readSerial = true;
-  }
+  light(ACTION_LED, OFF);
 }
 
 void callibrate(bool action) {
@@ -247,3 +242,36 @@ void raisePen () {
 void lowerPen () {
   servo.write(0);
 }
+
+// #define BUFFER_SIZE 27 // actual size of the buffer for integer values: (numberOfValsToRead*6)+(numberOfValsToRead-1)
+//
+// char incommingBuffer[BUFFER_SIZE]; // buffer to store incomming values
+// char incomming; // primary buffer to store single incommning bytes
+// int incommingCounter = 0; // counter for counting the positions inside the buffer
+// int command = 0;
+//
+// void setup() {
+//   Serial.begin(57600);
+// }
+//
+// void loop() {
+//   while (Serial.available() > 0) {
+//     incomming = Serial.read(); // read single incommning bytes
+//
+//     if (incomming != '\r') {
+//       incommingBuffer[incommingCounter++] = incomming; // go on the next position in the buffer
+//     } else {
+//       incommingBuffer[incommingCounter] = '&#092;&#048;'; // set the last byte to NULL to sign it for the string operators
+//
+//       char *a = strtok(incommingBuffer, ",.;"); // split the string after delimiters into tokens
+//       char *b = strtok(NULL, ",.;"); // ...
+//       char *c = strtok(NULL, ",.;"); // ...
+//       char *d = strtok(NULL, ",.;"); // add another line if needed
+//
+//       Serial.println(command++);
+//
+//       incommingCounter = 0; // reset the counter
+//       memset(incommingBuffer, 0, BUFFER_SIZE); //overwrite the incommingBuffer
+//     }
+//   }
+// }
